@@ -43,8 +43,8 @@ const server = http.createServer((req, res) => {
   res.end("Route not found");
 });
 
-server.listen(3000, () => {
-  console.log("Sample HTTP server listening on port 3000...");
+server.listen(8000, () => {
+  console.log("Sample HTTP server listening on port 8000...");
 });
 
 module.exports = server;
