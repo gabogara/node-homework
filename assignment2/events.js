@@ -10,6 +10,4 @@ const interval = setInterval(() => {
   emitter.emit("time", new Date().toString());
 }, 5000);
 
-interval.unref();
-
 module.exports = emitter;
