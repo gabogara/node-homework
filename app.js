@@ -3,6 +3,11 @@ const errorHandler = require("./middleware/error-handler");
 const notFound = require("./middleware/not-found");
 
 const app = express();
+global.user_id = null;
+global.users = [];
+global.tasks = [];
+
+app.use(express.json({ limit: "1kb" }));
 
 app.use((req, res, next) => {
   console.log(req.method, req.path, req.query);
