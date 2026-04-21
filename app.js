@@ -22,6 +22,11 @@ app.post("/testpost", (req, res) => {
   res.send("POST request received");
 });
 
+app.post("/api/users/register", (req, res) => {
+  console.log("This data was posted", JSON.stringify(req.body));
+  res.json({ message: "parsed the data" });
+});
+
 app.use(notFound);
 app.use(errorHandler);
 
