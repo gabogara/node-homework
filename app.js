@@ -1,6 +1,7 @@
 const express = require("express");
 const errorHandler = require("./middleware/error-handler");
 const notFound = require("./middleware/not-found");
+const { register } = require("./controllers/userController");
 
 const app = express();
 global.user_id = null;
@@ -22,13 +23,7 @@ app.post("/testpost", (req, res) => {
   res.send("POST request received");
 });
 
-app.post("/api/users/register", (req, res) => {
-  const newUser = { ...req.body };
-  global.users.push(newUser);
-  global.user_id = newUser;
-  delete req.body.password;
-  res.status(201).json(req.body);
-});
+app.post("/api/users/register", register);
 
 app.use(notFound);
 app.use(errorHandler);
