@@ -23,8 +23,11 @@ app.post("/testpost", (req, res) => {
 });
 
 app.post("/api/users/register", (req, res) => {
-  console.log("This data was posted", JSON.stringify(req.body));
-  res.json({ message: "parsed the data" });
+  const newUser = { ...req.body };
+  global.users.push(newUser);
+  global.user_id = newUser;
+  delete req.body.password;
+  res.status(201).json(req.body);
 });
 
 app.use(notFound);
