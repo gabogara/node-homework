@@ -24,7 +24,9 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/", dogsRouter); // Do not remove this line
+app.use(express.json({ limit: "1mb" }));
+
+app.use("/", dogsRouter);
 
 const server = app.listen(3000, () =>
   console.log("Server listening on port 3000")
