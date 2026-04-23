@@ -11,6 +11,12 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}]: ${req.method} ${req.path} (${req.requestId})`);
+  next();
+});
+
 app.use('/', dogsRouter); // Do not remove this line
 
 const server =	app.listen(3000, () => console.log("Server listening on port 3000"));
