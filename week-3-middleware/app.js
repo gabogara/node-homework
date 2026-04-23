@@ -5,7 +5,11 @@ const dogsRouter = require('./routes/dogs');
 
 const app = express();
 
-// Your middleware here
+app.use((req, res, next) => {
+  req.requestId = uuidv4();
+  res.setHeader("X-Request-Id", req.requestId);
+  next();
+});
 
 app.use('/', dogsRouter); // Do not remove this line
 
