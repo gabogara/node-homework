@@ -8,9 +8,9 @@ const errorHandlerMiddleware = (err, req, res, next) => {
   );
 
   if (!res.headersSent) {
-    return res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .send("An internal server error occurred.");
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: "An internal server error occurred.",
+    });
   }
 };
 
