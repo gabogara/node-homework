@@ -2,6 +2,11 @@ const express = require("express");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 const dogsRouter = require("./routes/dogs");
+const {
+  ValidationError,
+  NotFoundError,
+  UnauthorizedError,
+} = require("./errors");
 
 const app = express();
 
@@ -44,6 +49,31 @@ app.use((req, res, next) => {
 });
 
 app.use("/", dogsRouter);
+
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+
+  if (statusCode >= 400 && statusCode < 500) {
+    console.warn(`WARN: ${err.name}`, err.message);
+    return res.status(statusCode).json({
+      error: err.message,
+      requestId: req.requestId,
+    });
+  }
+
+  console.error("ERROR: Error", err.message);
+  return res.status(500).json({
+    error: "Internal Server Error",
+    requestId: req.requestId,
+  });
+});
+
+app.use((req, res) => {
+  return res.status(404).json({
+    error: "Route not found",
+    requestId: req.requestId,
+  });
+});
 
 const server = app.listen(3000, () =>
   console.log("Server listening on port 3000")
