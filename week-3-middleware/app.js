@@ -54,14 +54,14 @@ app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
 
   if (statusCode >= 400 && statusCode < 500) {
-    console.warn(`WARN: ${err.name}`, err.message);
+    console.warn(`WARN: ${err.name} ${err.message}`);
     return res.status(statusCode).json({
       error: err.message,
       requestId: req.requestId,
     });
   }
 
-  console.error("ERROR: Error", err.message);
+  console.error(`ERROR: Error ${err.message}`);
   return res.status(500).json({
     error: "Internal Server Error",
     requestId: req.requestId,
