@@ -1,7 +1,7 @@
 const express = require("express");
 const errorHandler = require("./middleware/error-handler");
 const notFound = require("./middleware/not-found");
-const { register } = require("./controllers/userController");
+const userRouter = require("./routes/userRoutes");
 
 const app = express();
 global.user_id = null;
@@ -19,11 +19,6 @@ app.get("/", (req, res) => {
   res.json({ message: "Hello, World!" });
 });
 
-app.post("/testpost", (req, res) => {
-  res.json({ message: "POST request received" });
-});
-
-const userRouter = require("./routes/userRoutes");
 app.use("/api/users", userRouter);
 
 app.use(notFound);

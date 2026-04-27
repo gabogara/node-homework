@@ -1,17 +1,13 @@
 const express = require("express");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID } = require("crypto");
 const path = require("path");
 const dogsRouter = require("./routes/dogs");
-const {
-  ValidationError,
-  NotFoundError,
-  UnauthorizedError,
-} = require("./errors");
+const { ValidationError, NotFoundError } = require("./errors");
 
 const app = express();
 
 app.use((req, res, next) => {
-  req.requestId = uuidv4();
+  req.requestId = randomUUID();
   res.setHeader("X-Request-Id", req.requestId);
   next();
 });
