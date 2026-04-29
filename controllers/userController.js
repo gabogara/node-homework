@@ -1,11 +1,24 @@
 const { StatusCodes } = require("http-status-codes");
+const { userSchema } = require("../validation/userSchema");
 
 const register = (req, res) => {
-  const newUser = { ...req.body };
+  if (!req.body) req.body = {};
+
+  const { error, value } = userSchema.validate(req.body, {
+    abortEarly: false,
+  });
+
+  if (error) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      message: error.message,
+    });
+  }
+
+  const newUser = { ...value };
   global.users.push(newUser);
   global.user_id = newUser;
 
-  const userResponse = { ...req.body };
+  const userResponse = { ...value };
   delete userResponse.password;
 
   return res.status(StatusCodes.CREATED).json(userResponse);
