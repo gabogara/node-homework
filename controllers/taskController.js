@@ -52,7 +52,11 @@ const index = (req, res) => {
   const userTasks = global.tasks.filter(
     (task) => task.userId === global.user_id.email
   );
-
+  if (userTasks.length === 0) {
+    return res.status(StatusCodes.NOT_FOUND).json({
+      message: "That task was not found",
+    });
+  }
   const sanitizedTasks = userTasks.map(sanitizeTask);
 
   return res.status(StatusCodes.OK).json(sanitizedTasks);
