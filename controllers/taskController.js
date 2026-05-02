@@ -15,7 +15,7 @@ const sanitizeTask = (task) => {
 };
 
 const getTaskId = (req) => {
-  const taskId = parseInt(req.params?.id);
+  const taskId = parseInt(req.params?.id, 10);
 
   if (!taskId) {
     return null;
