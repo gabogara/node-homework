@@ -1,22 +1,51 @@
 const { StatusCodes } = require("http-status-codes");
+const { userSchema } = require("../validation/userSchema");
+const { hashPassword, comparePassword } = require("../utils/passwordUtils");
 
-const register = (req, res) => {
-  const newUser = { ...req.body };
+const register = async (req, res) => {
+  if (!req.body) req.body = {};
+
+  const { error, value } = userSchema.validate(req.body, {
+    abortEarly: false,
+  });
+
+  if (error) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      message: error.message,
+    });
+  }
+  const hashedPassword = await hashPassword(value.password);
+
+  const newUser = {
+    name: value.name,
+    email: value.email,
+    hashedPassword,
+  };
   global.users.push(newUser);
   global.user_id = newUser;
 
-  const userResponse = { ...req.body };
-  delete userResponse.password;
-
-  return res.status(StatusCodes.CREATED).json(userResponse);
+  return res.status(StatusCodes.CREATED).json({
+    name: newUser.name,
+    email: newUser.email,
+  });
 };
 
-const logon = (req, res) => {
+const logon = async (req, res) => {
   const { email, password } = req.body;
 
   const foundUser = global.users.find((user) => user.email === email);
 
-  if (!foundUser || foundUser.password !== password) {
+  if (!foundUser) {
+    return res.status(StatusCodes.UNAUTHORIZED).json({
+      message: "Authentication Failed",
+    });
+  }
+  const passwordMatches = await comparePassword(
+    password,
+    foundUser.hashedPassword
+  );
+
+  if (!passwordMatches) {
     return res.status(StatusCodes.UNAUTHORIZED).json({
       message: "Authentication Failed",
     });
