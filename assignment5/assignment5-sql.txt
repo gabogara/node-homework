@@ -14,3 +14,37 @@ FROM orders JOIN line_items ON orders.order_id = line_items.order_id JOIN produc
 GROUP BY orders.customer_id, orders.order_id) AS t ON c.customer_id = t.customer_id 
 GROUP BY c.customer_id, c.customer_name 
 ORDER BY c.customer_name;
+
+# Task 3
+# find customer
+SELECT customer_id FROM customers WHERE customer_name = 'Perez and Sons';
+
+# find employee
+SELECT employee_id FROM employees WHERE first_name = 'Miranda' AND last_name = 'Harris';
+
+# cheapest products
+SELECT product_id FROM products ORDER BY price ASC LIMIT 5;
+
+# begin transaction
+BEGIN;
+
+# create order
+INSERT INTO orders (customer_id, employee_id, date)
+VALUES (16, 7, '2026-05-02')
+RETURNING order_id;
+
+# insert line items
+INSERT INTO line_items (order_id, product_id, quantity)
+VALUES
+(231, 23, 10),
+(231, 18, 10),
+(231, 44, 10),
+(231, 15, 10),
+(231, 9, 10);
+
+# commit
+COMMIT;
+
+# verify
+SELECT * FROM line_items WHERE order_id = 231;
+
