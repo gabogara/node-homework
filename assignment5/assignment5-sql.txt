@@ -48,3 +48,9 @@ COMMIT;
 # verify
 SELECT * FROM line_items WHERE order_id = 231;
 
+# Task 4
+SELECT employees.first_name, employees.last_name, 
+COUNT(orders.order_id) AS order_count 
+FROM employees JOIN orders ON employees.employee_id = orders.employee_id 
+GROUP BY employees.employee_id, employees.first_name, employees.last_name 
+HAVING COUNT(orders.order_id) > 5 ORDER BY employees.last_name;
