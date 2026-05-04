@@ -1,8 +1,9 @@
 const { StatusCodes } = require("http-status-codes");
 const { userSchema } = require("../validation/userSchema");
 const { hashPassword, comparePassword } = require("../utils/passwordUtils");
+const pool = require("../db/pg-pool");
 
-const register = async (req, res) => {
+const register = async (req, res, next) => {
   if (!req.body) req.body = {};
 
   const { error, value } = userSchema.validate(req.body, {
@@ -11,52 +12,72 @@ const register = async (req, res) => {
 
   if (error) {
     return res.status(StatusCodes.BAD_REQUEST).json({
-      message: error.message,
+      message: "Validation failed",
+      details: error.details,
     });
   }
-  const hashedPassword = await hashPassword(value.password);
+  value.hashed_password = await hashPassword(value.password);
 
-  const newUser = {
-    name: value.name,
-    email: value.email,
-    hashedPassword,
-  };
-  global.users.push(newUser);
-  global.user_id = newUser;
+  try {
+    const user = await pool.query(
+      `INSERT INTO users (email, name, hashed_password)
+       VALUES ($1, $2, $3)
+       RETURNING id, email, name`,
+      [value.email, value.name, value.hashed_password]
+    );
 
-  return res.status(StatusCodes.CREATED).json({
-    name: newUser.name,
-    email: newUser.email,
-  });
+    global.user_id = user.rows[0].id;
+
+    return res.status(StatusCodes.CREATED).json({
+      name: user.rows[0].name,
+      email: user.rows[0].email,
+    });
+  } catch (e) {
+    if (e.code === "23505") {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: "Email already registered",
+      });
+    }
+
+    return next(e);
+  }
 };
 
-const logon = async (req, res) => {
+const logon = async (req, res, next) => {
   const { email, password } = req.body;
 
-  const foundUser = global.users.find((user) => user.email === email);
+  try {
+    const result = await pool.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
 
-  if (!foundUser) {
-    return res.status(StatusCodes.UNAUTHORIZED).json({
-      message: "Authentication Failed",
+    if (result.rows.length === 0) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({
+        message: "Authentication Failed",
+      });
+    }
+
+    const foundUser = result.rows[0];
+
+    const passwordMatches = await comparePassword(
+      password,
+      foundUser.hashed_password
+    );
+    if (!passwordMatches) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({
+        message: "Authentication Failed",
+      });
+    }
+
+    global.user_id = foundUser.id;
+
+    return res.status(StatusCodes.OK).json({
+      name: foundUser.name,
+      email: foundUser.email,
     });
+  } catch (e) {
+    return next(e);
   }
-  const passwordMatches = await comparePassword(
-    password,
-    foundUser.hashedPassword
-  );
-
-  if (!passwordMatches) {
-    return res.status(StatusCodes.UNAUTHORIZED).json({
-      message: "Authentication Failed",
-    });
-  }
-
-  global.user_id = foundUser;
-
-  return res.status(StatusCodes.OK).json({
-    name: foundUser.name,
-    email: foundUser.email,
-  });
 };
 
 const logoff = (req, res) => {
