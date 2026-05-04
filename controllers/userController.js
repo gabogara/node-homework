@@ -39,7 +39,8 @@ const register = async (req, res, next) => {
       });
     }
 
-    return next(e);
+    if (next) return next(e);
+    throw e;
   }
 };
 
@@ -76,7 +77,8 @@ const logon = async (req, res, next) => {
       email: foundUser.email,
     });
   } catch (e) {
-    return next(e);
+    if (next) return next(e);
+    throw e;
   }
 };
 
