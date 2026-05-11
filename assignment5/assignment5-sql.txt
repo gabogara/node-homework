@@ -38,9 +38,9 @@ INSERT INTO line_items (order_id, product_id, quantity)
 VALUES
 (231, 23, 10),
 (231, 18, 10),
-(231, 44, 10),
-(231, 15, 10),
-(231, 9, 10);
+(231, 43, 10),
+(231, 9, 10),
+(231, 44, 10);
 
 # commit
 COMMIT;
