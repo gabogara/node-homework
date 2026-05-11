@@ -1,7 +1,7 @@
 const { StatusCodes } = require("http-status-codes");
 const { userSchema } = require("../validation/userSchema");
 const { hashPassword, comparePassword } = require("../utils/passwordUtils");
-const pool = require("../db/pg-pool");
+const prisma = require("../db/prisma");
 
 const register = async (req, res, next) => {
   if (!req.body) req.body = {};
@@ -16,53 +16,58 @@ const register = async (req, res, next) => {
       details: error.details,
     });
   }
-  value.hashed_password = await hashPassword(value.password);
+  const hashedPassword = await hashPassword(value.password);
 
   try {
-    const user = await pool.query(
-      `INSERT INTO users (email, name, hashed_password)
-       VALUES ($1, $2, $3)
-       RETURNING id, email, name`,
-      [value.email, value.name, value.hashed_password]
-    );
+    const user = await prisma.user.create({
+      data: {
+        name: value.name,
+        email: value.email,
+        hashedPassword,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
 
-    global.user_id = user.rows[0].id;
+    global.user_id = user.id;
 
     return res.status(StatusCodes.CREATED).json({
-      name: user.rows[0].name,
-      email: user.rows[0].email,
+      name: user.name,
+      email: user.email,
     });
-  } catch (e) {
-    if (e.code === "23505") {
+  } catch (err) {
+    if (err.name === "PrismaClientKnownRequestError" && err.code === "P2002") {
       return res.status(StatusCodes.BAD_REQUEST).json({
         message: "Email already registered",
       });
     }
 
-    if (next) return next(e);
-    throw e;
+    if (next) return next(err);
+    throw err;
   }
 };
 
 const logon = async (req, res, next) => {
-  const { email, password } = req.body;
+  let { email, password } = req.body;
+  email = email.toLowerCase();
 
   try {
-    const result = await pool.query("SELECT * FROM users WHERE email = $1", [
-      email,
-    ]);
+    const foundUser = await prisma.user.findUnique({
+      where: { email },
+    });
 
-    if (result.rows.length === 0) {
+    if (!foundUser) {
       return res.status(StatusCodes.UNAUTHORIZED).json({
         message: "Authentication Failed",
       });
     }
 
-    const foundUser = result.rows[0];
-
     const passwordMatches = await comparePassword(
       password,
-      foundUser.hashed_password
+      foundUser.hashedPassword
     );
     if (!passwordMatches) {
       return res.status(StatusCodes.UNAUTHORIZED).json({
@@ -76,9 +81,9 @@ const logon = async (req, res, next) => {
       name: foundUser.name,
       email: foundUser.email,
     });
-  } catch (e) {
-    if (next) return next(e);
-    throw e;
+  } catch (err) {
+    if (next) return next(err);
+    throw err;
   }
 };
 
