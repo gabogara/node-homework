@@ -20,12 +20,14 @@ const create = async (req, res, next) => {
       data: {
         title: value.title,
         isCompleted: value.isCompleted,
+        priority: value.priority,
         userId: global.user_id,
       },
       select: {
         id: true,
         title: true,
         isCompleted: true,
+        priority: true,
       },
     });
 
