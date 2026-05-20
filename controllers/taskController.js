@@ -233,10 +233,57 @@ const deleteTask = async (req, res, next) => {
   }
 };
 
+const bulkCreate = async (req, res, next) => {
+  const { tasks } = req.body;
+
+  if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: "Invalid request data. Expected an array of tasks.",
+    });
+  }
+
+  const validTasks = [];
+
+  for (const task of tasks) {
+    const { error, value } = taskSchema.validate(task);
+
+    if (error) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        error: "Validation failed",
+        details: error.details,
+      });
+    }
+
+    validTasks.push({
+      title: value.title,
+      isCompleted: value.isCompleted,
+      priority: value.priority,
+      userId: global.user_id,
+    });
+  }
+
+  try {
+    const result = await prisma.task.createMany({
+      data: validTasks,
+      skipDuplicates: false,
+    });
+
+    return res.status(StatusCodes.CREATED).json({
+      message: "Bulk task creation successful",
+      tasksCreated: result.count,
+      totalRequested: validTasks.length,
+    });
+  } catch (err) {
+    if (next) return next(err);
+    throw err;
+  }
+};
+
 module.exports = {
   create,
   index,
   show,
   update,
   deleteTask,
+  bulkCreate,
 };
