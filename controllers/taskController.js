@@ -121,6 +121,14 @@ const show = async (req, res, next) => {
         id: true,
         title: true,
         isCompleted: true,
+        priority: true,
+        createdAt: true,
+        User: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
       },
     });
 
@@ -169,6 +177,8 @@ const update = async (req, res, next) => {
         id: true,
         title: true,
         isCompleted: true,
+        priority: true,
+        createdAt: true,
       },
     });
 
@@ -206,6 +216,8 @@ const deleteTask = async (req, res, next) => {
         id: true,
         title: true,
         isCompleted: true,
+        priority: true,
+        createdAt: true,
       },
     });
 
