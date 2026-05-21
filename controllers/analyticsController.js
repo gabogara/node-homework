@@ -76,7 +76,57 @@ const getUserAnalytics = async (req, res, next) => {
 };
 
 const getUsersWithStats = async (req, res, next) => {
-  return res.status(501).json({ message: "Not implemented yet" });
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 10;
+  const skip = (page - 1) * limit;
+
+  try {
+    const usersRaw = await prisma.user.findMany({
+      include: {
+        Task: {
+          where: { isCompleted: false },
+          select: { id: true },
+          take: 5,
+        },
+        _count: {
+          select: {
+            Task: true,
+          },
+        },
+      },
+      skip,
+      take: limit,
+      orderBy: { createdAt: "desc" },
+    });
+
+    const users = usersRaw.map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt,
+      _count: user._count,
+      Task: user.Task,
+    }));
+
+    const totalUsers = await prisma.user.count();
+
+    const pagination = {
+      page,
+      limit,
+      total: totalUsers,
+      pages: Math.ceil(totalUsers / limit),
+      hasNext: page * limit < totalUsers,
+      hasPrev: page > 1,
+    };
+
+    return res.status(200).json({
+      users,
+      pagination,
+    });
+  } catch (err) {
+    if (next) return next(err);
+    throw err;
+  }
 };
 
 const searchTasks = async (req, res, next) => {
