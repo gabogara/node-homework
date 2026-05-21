@@ -76,8 +76,21 @@ const getUserAnalytics = async (req, res, next) => {
 };
 
 const getUsersWithStats = async (req, res, next) => {
-  const page = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit, 10) || 10;
+  const page = req.query.page ? parseInt(req.query.page, 10) : 1;
+  const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
+
+  if (
+    Number.isNaN(page) ||
+    Number.isNaN(limit) ||
+    page < 1 ||
+    limit < 1 ||
+    limit > 100
+  ) {
+    return res.status(400).json({
+      error: "Invalid pagination parameters",
+    });
+  }
+
   const skip = (page - 1) * limit;
 
   try {
@@ -138,7 +151,13 @@ const searchTasks = async (req, res, next) => {
     });
   }
 
-  const limit = parseInt(req.query.limit, 10) || 20;
+  const limit = req.query.limit ? parseInt(req.query.limit, 10) : 20;
+
+  if (Number.isNaN(limit) || limit < 1 || limit > 100) {
+    return res.status(400).json({
+      error: "Invalid limit parameter",
+    });
+  }
 
   const searchPattern = `%${searchQuery}%`;
   const exactMatch = searchQuery;

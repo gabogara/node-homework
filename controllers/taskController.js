@@ -39,10 +39,22 @@ const create = async (req, res, next) => {
 };
 
 const index = async (req, res, next) => {
-  const page = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit, 10) || 10;
-  const skip = (page - 1) * limit;
+  const page = req.query.page ? parseInt(req.query.page, 10) : 1;
+  const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
 
+  if (
+    Number.isNaN(page) ||
+    Number.isNaN(limit) ||
+    page < 1 ||
+    limit < 1 ||
+    limit > 100
+  ) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: "Invalid pagination parameters",
+    });
+  }
+  const skip = (page - 1) * limit;
+  
   const whereClause = {
     userId: global.user_id,
   };
