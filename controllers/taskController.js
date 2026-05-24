@@ -20,12 +20,14 @@ const create = async (req, res, next) => {
       data: {
         title: value.title,
         isCompleted: value.isCompleted,
+        priority: value.priority,
         userId: global.user_id,
       },
       select: {
         id: true,
         title: true,
         isCompleted: true,
+        priority: true,
       },
     });
 
@@ -37,25 +39,73 @@ const create = async (req, res, next) => {
 };
 
 const index = async (req, res, next) => {
+  const page = req.query.page ? parseInt(req.query.page, 10) : 1;
+  const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
+
+  if (
+    Number.isNaN(page) ||
+    Number.isNaN(limit) ||
+    page < 1 ||
+    limit < 1 ||
+    limit > 100
+  ) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: "Invalid pagination parameters",
+    });
+  }
+  const skip = (page - 1) * limit;
+  
+  const whereClause = {
+    userId: global.user_id,
+  };
+
+  if (req.query.find) {
+    whereClause.title = {
+      contains: req.query.find,
+      mode: "insensitive",
+    };
+  }
+
   try {
     const tasks = await prisma.task.findMany({
-      where: {
-        userId: global.user_id,
-      },
+      where: whereClause,
       select: {
         id: true,
         title: true,
         isCompleted: true,
+        priority: true,
+        createdAt: true,
+        User: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
+      skip,
+      take: limit,
+      orderBy: {
+        createdAt: "desc",
       },
     });
 
-    if (tasks.length === 0) {
-      return res.status(StatusCodes.NOT_FOUND).json({
-        message: "That task was not found",
-      });
-    }
+    const total = await prisma.task.count({
+      where: whereClause,
+    });
 
-    return res.status(StatusCodes.OK).json(tasks);
+    const pagination = {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
+      hasNext: page * limit < total,
+      hasPrev: page > 1,
+    };
+
+    return res.status(StatusCodes.OK).json({
+      tasks,
+      pagination,
+    });
   } catch (err) {
     if (next) return next(err);
     throw err;
@@ -83,6 +133,14 @@ const show = async (req, res, next) => {
         id: true,
         title: true,
         isCompleted: true,
+        priority: true,
+        createdAt: true,
+        User: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
       },
     });
 
@@ -131,6 +189,8 @@ const update = async (req, res, next) => {
         id: true,
         title: true,
         isCompleted: true,
+        priority: true,
+        createdAt: true,
       },
     });
 
@@ -168,6 +228,8 @@ const deleteTask = async (req, res, next) => {
         id: true,
         title: true,
         isCompleted: true,
+        priority: true,
+        createdAt: true,
       },
     });
 
@@ -183,10 +245,57 @@ const deleteTask = async (req, res, next) => {
   }
 };
 
+const bulkCreate = async (req, res, next) => {
+  const { tasks } = req.body;
+
+  if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: "Invalid request data. Expected an array of tasks.",
+    });
+  }
+
+  const validTasks = [];
+
+  for (const task of tasks) {
+    const { error, value } = taskSchema.validate(task);
+
+    if (error) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        error: "Validation failed",
+        details: error.details,
+      });
+    }
+
+    validTasks.push({
+      title: value.title,
+      isCompleted: value.isCompleted,
+      priority: value.priority,
+      userId: global.user_id,
+    });
+  }
+
+  try {
+    const result = await prisma.task.createMany({
+      data: validTasks,
+      skipDuplicates: false,
+    });
+
+    return res.status(StatusCodes.CREATED).json({
+      message: "Bulk task creation successful",
+      tasksCreated: result.count,
+      totalRequested: validTasks.length,
+    });
+  } catch (err) {
+    if (next) return next(err);
+    throw err;
+  }
+};
+
 module.exports = {
   create,
   index,
   show,
   update,
   deleteTask,
+  bulkCreate,
 };
