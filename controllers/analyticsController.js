@@ -1,13 +1,21 @@
 const prisma = require("../db/prisma");
 
-const getUserAnalytics = async (req, res, next) => {
-  const userId = parseInt(req.params.id, 10);
+const {
+  userIdSchema,
+  paginationSchema,
+  searchSchema,
+} = require("../validation/analyticsSchema");
 
-  if (isNaN(userId)) {
+const getUserAnalytics = async (req, res, next) => {
+  const { error, value } = userIdSchema.validate(req.params);
+
+  if (error) {
     return res.status(400).json({
-      error: "Invalid user ID",
+      error: error.message,
     });
   }
+
+  const userId = value.id;
 
   try {
     const user = await prisma.user.findUnique({
@@ -76,20 +84,15 @@ const getUserAnalytics = async (req, res, next) => {
 };
 
 const getUsersWithStats = async (req, res, next) => {
-  const page = req.query.page ? parseInt(req.query.page, 10) : 1;
-  const limit = req.query.limit ? parseInt(req.query.limit, 10) : 10;
+  const { error, value } = paginationSchema.validate(req.query);
 
-  if (
-    Number.isNaN(page) ||
-    Number.isNaN(limit) ||
-    page < 1 ||
-    limit < 1 ||
-    limit > 100
-  ) {
+  if (error) {
     return res.status(400).json({
-      error: "Invalid pagination parameters",
+      error: error.message,
     });
   }
+
+  const { page, limit } = value;
 
   const skip = (page - 1) * limit;
 
@@ -143,21 +146,15 @@ const getUsersWithStats = async (req, res, next) => {
 };
 
 const searchTasks = async (req, res, next) => {
-  const searchQuery = req.query.q;
+  const { error, value } = searchSchema.validate(req.query);
 
-  if (!searchQuery || searchQuery.trim().length < 2) {
+  if (error) {
     return res.status(400).json({
-      error: "Search query must be at least 2 characters long",
+      error: error.message,
     });
   }
 
-  const limit = req.query.limit ? parseInt(req.query.limit, 10) : 20;
-
-  if (Number.isNaN(limit) || limit < 1 || limit > 100) {
-    return res.status(400).json({
-      error: "Invalid limit parameter",
-    });
-  }
+  const { q: searchQuery, limit } = value;
 
   const searchPattern = `%${searchQuery}%`;
   const exactMatch = searchQuery;
