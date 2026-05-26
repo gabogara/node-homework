@@ -2,6 +2,34 @@ const { StatusCodes } = require("http-status-codes");
 const { userSchema } = require("../validation/userSchema");
 const { hashPassword, comparePassword } = require("../utils/passwordUtils");
 const prisma = require("../db/prisma");
+const { randomUUID } = require("crypto");
+const jwt = require("jsonwebtoken");
+
+const cookieFlags = (req) => {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Strict",
+  };
+};
+
+const setJwtCookie = (req, res, user) => {
+  const payload = {
+    id: user.id,
+    csrfToken: randomUUID(),
+  };
+
+  const token = jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: "1h",
+  });
+
+  res.cookie("jwt", token, {
+    ...cookieFlags(req),
+    maxAge: 3600000,
+  });
+
+  return payload.csrfToken;
+};
 
 const register = async (req, res, next) => {
   if (!req.body) req.body = {};
