@@ -131,11 +131,12 @@ const logon = async (req, res, next) => {
       });
     }
 
-    global.user_id = foundUser.id;
+    const csrfToken = setJwtCookie(req, res, foundUser);
 
     return res.status(StatusCodes.OK).json({
       name: foundUser.name,
       email: foundUser.email,
+      csrfToken,
     });
   } catch (err) {
     if (next) return next(err);
