@@ -7,14 +7,27 @@ const taskRouter = require("./routes/taskRoutes");
 const prisma = require("./db/prisma");
 const analyticsRouter = require("./routes/analyticsRoutes");
 const cookieParser = require("cookie-parser");
+const helmet = require("helmet");
+const { xss } = require("express-xss-sanitizer");
+const rateLimiter = require("express-rate-limit");
 
 const app = express();
+app.set("trust proxy", 1);
 global.user_id = null;
 global.users = [];
 global.tasks = [];
 
+app.use(
+  rateLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+  })
+);
+
+app.use(helmet());
 app.use(express.json({ limit: "1kb" }));
 app.use(cookieParser());
+app.use(xss());
 
 app.use((req, res, next) => {
   console.log(req.method, req.path, req.query);
