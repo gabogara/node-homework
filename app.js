@@ -2,10 +2,11 @@ const express = require("express");
 const errorHandler = require("./middleware/error-handler");
 const notFound = require("./middleware/not-found");
 const userRouter = require("./routes/userRoutes");
-const authMiddleware = require("./middleware/auth");
+const jwtMiddleware = require("./middleware/jwtMiddleware");
 const taskRouter = require("./routes/taskRoutes");
 const prisma = require("./db/prisma");
 const analyticsRouter = require("./routes/analyticsRoutes");
+const cookieParser = require("cookie-parser");
 
 const app = express();
 global.user_id = null;
@@ -13,6 +14,7 @@ global.users = [];
 global.tasks = [];
 
 app.use(express.json({ limit: "1kb" }));
+app.use(cookieParser());
 
 app.use((req, res, next) => {
   console.log(req.method, req.path, req.query);
@@ -25,8 +27,8 @@ app.get("/", (req, res) => {
 
 app.use("/api/users", userRouter);
 
-app.use("/api/tasks", authMiddleware, taskRouter);
-app.use("/api/analytics", authMiddleware, analyticsRouter);
+app.use("/api/tasks", jwtMiddleware, taskRouter);
+app.use("/api/analytics", jwtMiddleware, analyticsRouter);
 
 app.get("/health", async (req, res) => {
   try {
