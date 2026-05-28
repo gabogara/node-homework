@@ -172,8 +172,11 @@ const searchTasks = async (req, res, next) => {
         u.name as "user_name"
       FROM tasks t
       JOIN users u ON t.user_id = u.id
-      WHERE t.title ILIKE ${searchPattern} 
-         OR u.name ILIKE ${searchPattern}
+      WHERE t.user_id = ${req.user.id}
+  AND (
+    t.title ILIKE ${searchPattern}
+    OR u.name ILIKE ${searchPattern}
+  )
       ORDER BY 
         CASE 
           WHEN t.title ILIKE ${exactMatch} THEN 1
