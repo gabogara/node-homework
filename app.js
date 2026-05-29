@@ -13,9 +13,6 @@ const rateLimiter = require("express-rate-limit");
 
 const app = express();
 app.set("trust proxy", 1);
-global.user_id = null;
-global.users = [];
-global.tasks = [];
 
 app.use(
   rateLimiter({
