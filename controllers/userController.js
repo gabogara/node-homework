@@ -2,6 +2,7 @@ const { StatusCodes } = require("http-status-codes");
 const { userSchema } = require("../validation/userSchema");
 const { hashPassword, comparePassword } = require("../utils/passwordUtils");
 const prisma = require("../db/prisma");
+const { cookieFlags, setJwtCookie } = require("../utils/cookieUtils");
 
 const register = async (req, res, next) => {
   if (!req.body) req.body = {};
@@ -56,13 +57,14 @@ const register = async (req, res, next) => {
       return { user: newUser, welcomeTasks };
     });
 
-    global.user_id = result.user.id;
+    const csrfToken = setJwtCookie(res, result.user);
 
     res.status(StatusCodes.CREATED);
     res.json({
       user: result.user,
       welcomeTasks: result.welcomeTasks,
       transactionStatus: "success",
+      csrfToken,
     });
     return;
   } catch (err) {
@@ -102,11 +104,12 @@ const logon = async (req, res, next) => {
       });
     }
 
-    global.user_id = foundUser.id;
+    const csrfToken = setJwtCookie(res, foundUser);
 
     return res.status(StatusCodes.OK).json({
       name: foundUser.name,
       email: foundUser.email,
+      csrfToken,
     });
   } catch (err) {
     if (next) return next(err);
@@ -115,7 +118,7 @@ const logon = async (req, res, next) => {
 };
 
 const logoff = (req, res) => {
-  global.user_id = null;
+  res.clearCookie("jwt", cookieFlags());
   return res.sendStatus(StatusCodes.OK);
 };
 
