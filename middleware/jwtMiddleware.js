@@ -24,7 +24,7 @@ module.exports = async (req, res, next) => {
     };
 
     if (["POST", "PATCH", "PUT", "DELETE", "CONNECT"].includes(req.method)) {
-      if (req.get("X-CSRF-TOKEN") != decoded.csrfToken) {
+      if (req.get("X-CSRF-TOKEN") !== decoded.csrfToken) {
         return send401(res);
       }
     }

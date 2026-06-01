@@ -2,34 +2,7 @@ const { StatusCodes } = require("http-status-codes");
 const { userSchema } = require("../validation/userSchema");
 const { hashPassword, comparePassword } = require("../utils/passwordUtils");
 const prisma = require("../db/prisma");
-const { randomUUID } = require("crypto");
-const jwt = require("jsonwebtoken");
-
-const cookieFlags = (req) => {
-  return {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
-  };
-};
-
-const setJwtCookie = (req, res, user) => {
-  const payload = {
-    id: user.id,
-    csrfToken: randomUUID(),
-  };
-
-  const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: "1h",
-  });
-
-  res.cookie("jwt", token, {
-    ...cookieFlags(req),
-    maxAge: 3600000,
-  });
-
-  return payload.csrfToken;
-};
+const { cookieFlags, setJwtCookie } = require("../utils/cookieUtils");
 
 const register = async (req, res, next) => {
   if (!req.body) req.body = {};
@@ -84,7 +57,7 @@ const register = async (req, res, next) => {
       return { user: newUser, welcomeTasks };
     });
 
-    const csrfToken = setJwtCookie(req, res, result.user);
+    const csrfToken = setJwtCookie(res, result.user);
 
     res.status(StatusCodes.CREATED);
     res.json({
@@ -131,7 +104,7 @@ const logon = async (req, res, next) => {
       });
     }
 
-    const csrfToken = setJwtCookie(req, res, foundUser);
+    const csrfToken = setJwtCookie(res, foundUser);
 
     return res.status(StatusCodes.OK).json({
       name: foundUser.name,
@@ -145,7 +118,7 @@ const logon = async (req, res, next) => {
 };
 
 const logoff = (req, res) => {
-  res.clearCookie("jwt", cookieFlags(req));
+  res.clearCookie("jwt", cookieFlags());
   return res.sendStatus(StatusCodes.OK);
 };
 
