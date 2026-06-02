@@ -77,3 +77,45 @@ it("7. If validation is performed on a valid user object, error comes back falsy
 
   expect(error).toBeFalsy();
 });
+
+describe("task object validation tests", () => {
+  it("8. The task schema requires a title.", () => {
+    const { error } = taskSchema.validate(
+      { isCompleted: false },
+      { abortEarly: false }
+    );
+
+    expect(
+      error.details.find((detail) => detail.context.key === "title")
+    ).toBeDefined();
+  });
+
+  it("9. If an isCompleted value is specified, it must be valid.", () => {
+    const { error } = taskSchema.validate(
+      { title: "first task", isCompleted: "not boolean" },
+      { abortEarly: false }
+    );
+
+    expect(
+      error.details.find((detail) => detail.context.key === "isCompleted")
+    ).toBeDefined();
+  });
+
+  it("10. If an isCompleted value is not specified but the rest of the object is valid, a default of false is provided by validation.", () => {
+    const { value } = taskSchema.validate(
+      { title: "first task" },
+      { abortEarly: false }
+    );
+
+    expect(value.isCompleted).toBe(false);
+  });
+
+  it("11. If isCompleted in the provided object has the value true, it remains true after validation.", () => {
+    const { value } = taskSchema.validate(
+      { title: "first task", isCompleted: true },
+      { abortEarly: false }
+    );
+
+    expect(value.isCompleted).toBe(true);
+  });
+});
