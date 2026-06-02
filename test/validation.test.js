@@ -119,3 +119,23 @@ describe("task object validation tests", () => {
     expect(value.isCompleted).toBe(true);
   });
 });
+
+describe("patchTask object validation tests", () => {
+  it("12. The patchTaskSchema does not require a title.", () => {
+    const { error } = patchTaskSchema.validate(
+      { isCompleted: true },
+      { abortEarly: false }
+    );
+
+    expect(error).toBeFalsy();
+  });
+
+  it("13. If no value is provided for isCompleted this remains undefined in the returned value.", () => {
+    const { value } = patchTaskSchema.validate(
+      { title: "updated task" },
+      { abortEarly: false }
+    );
+
+    expect(value.isCompleted).toBeUndefined();
+  });
+});
