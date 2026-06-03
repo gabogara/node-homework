@@ -44,3 +44,22 @@ beforeAll(async () => {
 afterAll(async () => {
   await prisma.$disconnect();
 });
+
+describe("testing task creation", () => {
+  it("14. cant create a task without a user id", async () => {
+    expect.assertions(1);
+
+    const req = httpMocks.createRequest({
+      method: "POST",
+      body: { title: "first task" },
+    });
+
+    saveRes = httpMocks.createResponse({ eventEmitter: EventEmitter });
+
+    try {
+      await waitForRouteHandlerCompletion(create, req, saveRes);
+    } catch (e) {
+      expect(e.name).toBe("TypeError");
+    }
+  });
+});
