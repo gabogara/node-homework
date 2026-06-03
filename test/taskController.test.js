@@ -178,3 +178,37 @@ it("25. If you get the list of tasks using the userId from user2, you get a 404.
 
   expect(res.statusCode).toBe(404);
 });
+
+it("26. You can retrieve the created task using show().", async () => {
+  const req = httpMocks.createRequest({
+    method: "GET",
+  });
+
+  req.user = { id: user1.id };
+  req.params = { id: saveTaskId.toString() };
+
+  const res = httpMocks.createResponse({
+    eventEmitter: EventEmitter,
+  });
+
+  await waitForRouteHandlerCompletion(show, req, res);
+
+  expect(res.statusCode).toBe(200);
+});
+
+it("27. User2 can't retrieve this task entry. You should get a 404.", async () => {
+  const req = httpMocks.createRequest({
+    method: "GET",
+  });
+
+  req.user = { id: user2.id };
+  req.params = { id: saveTaskId.toString() };
+
+  const res = httpMocks.createResponse({
+    eventEmitter: EventEmitter,
+  });
+
+  await waitForRouteHandlerCompletion(show, req, res);
+
+  expect(res.statusCode).toBe(404);
+});
