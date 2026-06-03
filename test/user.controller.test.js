@@ -79,3 +79,24 @@ describe("testing logon, register, and logoff", () => {
     expect(saveRes.statusCode).toBe(200);
   });
 });
+
+it("35. A string in the cookie array starts with jwt=.", () => {
+  const setCookieArray = saveRes.get("Set-Cookie");
+  jwtCookie = setCookieArray.find((str) => str.startsWith("jwt="));
+
+  expect(jwtCookie).toBeDefined();
+});
+
+it("36. That string contains HttpOnly;.", () => {
+  expect(jwtCookie).toContain("HttpOnly");
+});
+
+it("37. The returned data from the register has the expected name.", () => {
+  saveData = saveRes._getJSONData();
+
+  expect(saveData.name).toBe("Bob");
+});
+
+it("38. The returned data contains a csrfToken.", () => {
+  expect(saveData.csrfToken).toBeDefined();
+});
