@@ -82,3 +82,33 @@ it("15. You can't create a task with a bogus user id.", async () => {
     expect(e.name).toBe("PrismaClientKnownRequestError");
   }
 });
+
+it("16. If you have a valid user id, create() succeeds (res.statusCode should be 201).", async () => {
+  const req = httpMocks.createRequest({
+    method: "POST",
+    body: { title: "first task" },
+  });
+
+  req.user = { id: user1.id };
+
+  saveRes = httpMocks.createResponse({ eventEmitter: EventEmitter });
+
+  await waitForRouteHandlerCompletion(create, req, saveRes);
+
+  expect(saveRes.statusCode).toBe(201);
+});
+
+it("17. The object returned from the create() call has the expected title.", () => {
+  saveData = saveRes._getJSONData();
+  saveTaskId = saveData.id;
+
+  expect(saveData.title).toBe("first task");
+});
+
+it("18. The object has the right value for isCompleted.", () => {
+  expect(saveData.isCompleted).toBe(false);
+});
+
+it("19. The object does not have any value for userId.", () => {
+  expect(saveData.userId).toBeUndefined();
+});
