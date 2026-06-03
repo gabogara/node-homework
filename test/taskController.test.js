@@ -63,3 +63,22 @@ describe("testing task creation", () => {
     }
   });
 });
+
+it("15. You can't create a task with a bogus user id.", async () => {
+  expect.assertions(1);
+
+  const req = httpMocks.createRequest({
+    method: "POST",
+    body: { title: "first task" },
+  });
+
+  req.user = { id: 999999 };
+
+  saveRes = httpMocks.createResponse({ eventEmitter: EventEmitter });
+
+  try {
+    await waitForRouteHandlerCompletion(create, req, saveRes);
+  } catch (e) {
+    expect(e.name).toBe("PrismaClientKnownRequestError");
+  }
+});
