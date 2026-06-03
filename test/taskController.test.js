@@ -112,3 +112,45 @@ it("18. The object has the right value for isCompleted.", () => {
 it("19. The object does not have any value for userId.", () => {
   expect(saveData.userId).toBeUndefined();
 });
+
+describe("test getting created tasks", () => {
+  it("20. You can't get a list of tasks without a user id.", async () => {
+    expect.assertions(1);
+
+    const req = httpMocks.createRequest({
+      method: "GET",
+    });
+
+    const res = httpMocks.createResponse({
+      eventEmitter: EventEmitter,
+    });
+
+    try {
+      await waitForRouteHandlerCompletion(index, req, res);
+    } catch (e) {
+      expect(e.name).toBe("TypeError");
+    }
+  });
+});
+
+it("21. If you use user1's id on index() the call returns a 200 status.", async () => {
+  const req = httpMocks.createRequest({
+    method: "GET",
+  });
+
+  req.user = { id: user1.id };
+
+  saveRes = httpMocks.createResponse({
+    eventEmitter: EventEmitter,
+  });
+
+  await waitForRouteHandlerCompletion(index, req, saveRes);
+
+  expect(saveRes.statusCode).toBe(200);
+});
+
+it("22. The returned object has a tasks array of length 1.", () => {
+  saveData = saveRes._getJSONData();
+
+  expect(saveData.tasks.length).toBe(1);
+});
