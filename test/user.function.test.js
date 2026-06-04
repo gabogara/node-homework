@@ -43,3 +43,17 @@ it("48. Test that the returned object includes a csrfToken.", () => {
   expect(saveRes.body.csrfToken).toBeDefined();
 });
 
+it("49. You can logon as the newly registered user.", async () => {
+  saveRes = await agent.post("/api/users/logon").send({
+    email: "jdeere@example.com",
+    password: "Pa$$word20",
+  });
+
+  expect(saveRes.status).toBe(200);
+});
+
+it("50. Verify that you are logged in: /api/tasks should not return a 401.", async () => {
+  saveRes = await agent.get("/api/tasks");
+
+  expect(saveRes.status).not.toBe(401);
+});
