@@ -8,6 +8,7 @@ const { app, server } = require("../app");
 
 let agent;
 let saveRes;
+let csrfToken;
 
 beforeAll(async () => {
   await prisma.task.deleteMany();
@@ -49,6 +50,8 @@ it("49. You can logon as the newly registered user.", async () => {
     password: "Pa$$word20",
   });
 
+  csrfToken = saveRes.body.csrfToken;
+
   expect(saveRes.status).toBe(200);
 });
 
@@ -56,4 +59,12 @@ it("50. Verify that you are logged in: /api/tasks should not return a 401.", asy
   saveRes = await agent.get("/api/tasks");
 
   expect(saveRes.status).not.toBe(401);
+});
+
+it("51. Verify that you can log out.", async () => {
+  saveRes = await agent
+    .post("/api/users/logoff")
+    .set("X-CSRF-TOKEN", csrfToken);
+
+  expect(saveRes.status).toBe(200);
 });
