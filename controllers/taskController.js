@@ -57,7 +57,12 @@ const index = async (req, res, next) => {
 
   const whereClause = {
     userId: req.user.id,
+    trash: false,
   };
+
+  if (req.query.includeTrash === "true") {
+    delete whereClause.trash;
+  }
 
   if (req.query.find) {
     whereClause.title = {
@@ -223,7 +228,10 @@ const deleteTask = async (req, res, next) => {
   }
 
   try {
-    const task = await prisma.task.delete({
+    const task = await prisma.task.update({
+      data: {
+        trash: true,
+      },
       where: {
         id_userId: {
           id: taskId,
