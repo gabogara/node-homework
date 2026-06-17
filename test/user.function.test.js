@@ -30,7 +30,10 @@ describe("testing actual network operations", () => {
       password: "Pa$$word20",
     };
 
-    saveRes = await agent.post("/api/users/register").send(newUser);
+    saveRes = await agent
+      .post("/api/users/register")
+      .set("X-Recaptcha-Test", process.env.RECAPTCHA_BYPASS)
+      .send(newUser);
 
     expect(saveRes.status).toBe(201);
   });
