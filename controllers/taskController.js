@@ -244,6 +244,7 @@ const deleteTask = async (req, res, next) => {
         isCompleted: true,
         priority: true,
         createdAt: true,
+        trash: true,
       },
     });
 
@@ -305,6 +306,78 @@ const bulkCreate = async (req, res, next) => {
   }
 };
 
+const bulkUpdate = async (req, res, next) => {
+  const { ids, isCompleted } = req.body;
+
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: "Invalid request data. Expected an array of task ids.",
+    });
+  }
+
+  if (typeof isCompleted !== "boolean") {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: "Invalid request data. Expected isCompleted to be a boolean.",
+    });
+  }
+
+  try {
+    const result = await prisma.task.updateMany({
+      where: {
+        id: {
+          in: ids,
+        },
+        userId: req.user.id,
+      },
+      data: {
+        isCompleted,
+      },
+    });
+
+    return res.status(StatusCodes.OK).json({
+      message: "Bulk task update successful",
+      tasksUpdated: result.count,
+      totalRequested: ids.length,
+    });
+  } catch (err) {
+    if (next) return next(err);
+    throw err;
+  }
+};
+
+const bulkDelete = async (req, res, next) => {
+  const { ids } = req.body;
+
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: "Invalid request data. Expected an array of task ids.",
+    });
+  }
+
+  try {
+    const result = await prisma.task.updateMany({
+      where: {
+        id: {
+          in: ids,
+        },
+        userId: req.user.id,
+      },
+      data: {
+        trash: true,
+      },
+    });
+
+    return res.status(StatusCodes.OK).json({
+      message: "Bulk task delete successful",
+      tasksDeleted: result.count,
+      totalRequested: ids.length,
+    });
+  } catch (err) {
+    if (next) return next(err);
+    throw err;
+  }
+};
+
 module.exports = {
   create,
   index,
@@ -312,4 +385,6 @@ module.exports = {
   update,
   deleteTask,
   bulkCreate,
+  bulkUpdate,
+  bulkDelete,
 };
