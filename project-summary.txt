@@ -1,2 +1,185 @@
-Render deployment URL:
-https://node-homework-89.onrender.com/
+Assignment 11 Extra Functionality
+
+This project includes additional backend functionality beyond the base task manager requirements. The new features include bulk task operations, analytics endpoints, and a soft-delete trash bin system.
+
+Live API:
+https://node-homework-89.onrender.com
+
+Extra REST APIs
+
+1. Bulk Create Tasks
+
+Method:
+POST
+
+Path:
+/api/tasks/bulk
+
+Body:
+{
+"tasks": [
+{
+"title": "First bulk task",
+"isCompleted": false,
+"priority": "medium"
+},
+{
+"title": "Second bulk task",
+"isCompleted": false,
+"priority": "high"
+}
+]
+}
+
+Description:
+Creates multiple tasks for the authenticated user in a single request.
+
+Authentication:
+Requires valid JWT cookie and CSRF token.
+
+2. Bulk Update Tasks
+
+Method:
+PATCH
+
+Path:
+/api/tasks/bulk
+
+Body:
+{
+"ids": [1, 2, 3],
+"isCompleted": true
+}
+
+Description:
+Updates the completion status of multiple tasks owned by the authenticated user.
+
+Authentication:
+Requires valid JWT cookie and CSRF token.
+
+3. Bulk Delete Tasks
+
+Method:
+DELETE
+
+Path:
+/api/tasks/bulk
+
+Body:
+{
+"ids": [1, 2, 3]
+}
+
+Description:
+Moves multiple tasks owned by the authenticated user to the trash by setting their trash status to true.
+
+Authentication:
+Requires valid JWT cookie and CSRF token.
+
+4. Soft Delete Task
+
+Method:
+DELETE
+
+Path:
+/api/tasks/:id
+
+Body:
+No body required.
+
+Description:
+Moves a single task to the trash instead of permanently deleting it.
+
+Authentication:
+Requires valid JWT cookie and CSRF token.
+
+5. List Tasks Including Trash
+
+Method:
+GET
+
+Path:
+/api/tasks?includeTrash=true
+
+Query Parameters:
+includeTrash=true
+
+Description:
+Returns both active and trashed tasks for the authenticated user. Without this query parameter, trashed tasks are excluded from the default task list.
+
+Authentication:
+Requires valid JWT cookie.
+
+6. User Analytics
+
+Method:
+GET
+
+Path:
+/api/analytics/users
+
+Body:
+No body required.
+
+Description:
+Returns analytics data for users and their task activity.
+
+Authentication:
+Requires valid JWT cookie.
+
+7. User Statistics
+
+Method:
+GET
+
+Path:
+/api/analytics/users/:id
+
+Path Parameters:
+id - user id
+
+Body:
+No body required.
+
+Description:
+Returns task statistics for a specific user.
+
+Authentication:
+Requires valid JWT cookie.
+
+8. Task Search Analytics
+
+Method:
+GET
+
+Path:
+/api/analytics/tasks/search
+
+Query Parameters:
+q - search term
+
+Example:
+/api/analytics/tasks/search?q=test
+
+Body:
+No body required.
+
+Description:
+Searches task data using the provided query term and returns matching task analytics results.
+
+Authentication:
+Requires valid JWT cookie.
+
+Testing Summary
+
+The extra APIs were tested using Postman and the deployed Render API. Testing included:
+
+* Creating multiple tasks with POST /api/tasks/bulk
+* Updating multiple tasks with PATCH /api/tasks/bulk
+* Moving multiple tasks to trash with DELETE /api/tasks/bulk
+* Soft deleting a single task with DELETE /api/tasks/:id
+* Verifying that GET /api/tasks excludes trashed tasks by default
+* Verifying that GET /api/tasks?includeTrash=true returns trashed tasks
+* Testing analytics endpoints
+* Confirming protected routes require authentication and CSRF validation where required
+* Confirming existing automated tests continue to pass
